@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">PopularMovies</string>
+    <string name="urlPath">path</string>
+    <string name="popularMovies">/popular</string>
+    <string name="topRated">/top_rated</string>
+    <string name="ReleaseDate">release_date</string>
+    <string name="Popularity">popularity</string>
+    <string name="Vote">vote_average</string>
+    <string name="MovieTitle">title</string>
+    <string name="MovieOverview">overview</string>
+    <string name="MovieData">movieData</string>
+    <string name="OutOfTen">/10</string>
+    <string name="MovieDataDetails">movieData</string>
+</resources>
