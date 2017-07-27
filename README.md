@@ -1,10 +1,10 @@
 # PopularMovies
 
-Popular Movies Part 1 & 2 
+Popular Movies Part 1 & 2 - API key: "676eeceb42c83ae99f98f7683077a7de"
 
-![scrn1](https://user-images.githubusercontent.com/11877726/28692503-7cd44a10-733e-11e7-9a6d-cf8ae7f1c0c2.jpg)
+![scrn1](https://user-images.githubusercontent.com/11877726/28692503-7cd44a10-733e-11e7-9a6d-cf8ae7f1c0c2.jpg) ![scnr2](https://user-images.githubusercontent.com/11877726/28692594-e0b8ab02-733e-11e7-87ec-b2c8bf18508f.jpg) 
 
-![scnr2](https://user-images.githubusercontent.com/11877726/28692594-e0b8ab02-733e-11e7-87ec-b2c8bf18508f.jpg)
+
 
 ![scrn3](https://user-images.githubusercontent.com/11877726/28692596-e24fb456-733e-11e7-9668-44ab89d139a6.jpg)
 
