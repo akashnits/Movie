@@ -91,7 +91,7 @@ public final class MoviesJsonUtils {
         String review = movieObject.getString(context.getResources().getString(R.string.MovieOverview));
         int id = movieObject.getInt("id");
 
-        return new Movie(imageUrl, date, ratings, title, review, id);
+        return new Movie(id, imageUrl, date, ratings, title, review);
     }
 
 

@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -129,12 +130,19 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         switch (item.getItemId()){
             case R.id.popularMovies:
                 args.putString(getString(R.string.urlPath), getString(R.string.popularMovies));
+                getSupportLoaderManager().restartLoader(FORECAST_LOADER_ID, args, MainActivity.this);
                 break;
             case R.id.topRated:
                 args.putString(getString(R.string.urlPath), getString(R.string.topRated));
+                getSupportLoaderManager().restartLoader(FORECAST_LOADER_ID, args, MainActivity.this);
                 break;
+            case R.id.favoriteMovies:
+                Intent intent= new Intent(this, FavoritesActivity.class);
+                startActivity(intent);
+                Log.v("MainActivity", "Favorites intent launched");
+                break;
+            default:break;
         }
-        getSupportLoaderManager().restartLoader(FORECAST_LOADER_ID, args, MainActivity.this);
         return true;
     }
 }

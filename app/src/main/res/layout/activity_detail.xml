@@ -22,13 +22,13 @@
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
             android:layout_marginStart="16dp"
-            android:background="#BDBDBD"
+            android:background="@color/lightGray"
             android:gravity="center_vertical"
             android:paddingLeft="8dp"
             android:paddingRight="8dp"
-            android:text="Chappie"
+            tools:text="Chappie"
             android:textAppearance="@android:style/TextAppearance.Material.Title"
-            android:textColor="#000000"
+            android:textColor="@color/black"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -45,10 +45,10 @@
             app:srcCompat="@android:drawable/gallery_thumb" />
 
         <TextView
-            android:text="2015"
-            android:textSize="30sp"
+            tools:text="2015"
+            android:textSize="@dimen/text_size_movie_name"
             android:textAlignment="center"
-            android:textColor="#7c7f7b"
+            android:textColor="@color/movieNameColor"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/tvDate"
@@ -61,9 +61,9 @@
 
 
         <TextView
-            android:text="8.1/10"
-            android:textColor="#232322"
-            android:textSize="12sp"
+            tools:text="8.1/10"
+            android:textColor="@color/ratingColor"
+            android:textSize="@dimen/text_size_release_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/tvRating"
@@ -80,10 +80,10 @@
             android:layout_marginTop="19dp"
             android:paddingLeft="4dp"
             android:paddingRight="4dp"
-            android:text="A live-action adaptation of Disney's version of the classic 'Beauty and the Beast' tale of a cursed prince and a beautiful young woman who helps him break the spell."
+            tools:text="A live-action adaptation of Disney's version of the classic 'Beauty and the Beast' tale of a cursed prince and a beautiful young woman who helps him break the spell."
             android:textAlignment="textStart"
-            android:textColor="#3a3a38"
-            android:textSize="15sp"
+            android:textColor="@color/reviewColor"
+            android:textSize="@dimen/text_size_overview"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/ivDetail"
@@ -102,8 +102,8 @@
 
         <TextView
             android:id="@+id/tvTrailers"
-            android:text="Trailers"
-            android:textColor="#000000"
+            tools:text="Trailers"
+            android:textColor="@color/black"
             android:textStyle="bold"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -137,17 +137,20 @@
             app:layout_constraintHorizontal_bias="0.506"
             android:onClick="reviewClicked"/>
 
-        <Button
+        <CheckBox
             android:id="@+id/btFavorite"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Mark as Favorite"
+            android:button="@drawable/favorite_checkbox_selector"
             app:layout_constraintLeft_toRightOf="@+id/ivDetail"
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"
             app:layout_constraintRight_toRightOf="parent"
             android:layout_marginTop="8dp"
-            app:layout_constraintTop_toBottomOf="@+id/btReview" />
+            app:layout_constraintTop_toBottomOf="@+id/btReview"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:onClick="favoriteClicked"/>
 
 
     </android.support.constraint.ConstraintLayout>

@@ -11,4 +11,7 @@
     <string name="MovieData">movieData</string>
     <string name="OutOfTen">/10</string>
     <string name="MovieDataDetails">movieData</string>
+    <string name="top_rated">Top Rated</string>
+    <string name="popular_movies">Popular Movies</string>
+    <string name="favorite_movies">Favorite Movies</string>
 </resources>

@@ -1,6 +1,9 @@
 package com.example.android.popularmovies;
 
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.constraint.ConstraintLayout;
@@ -11,14 +14,17 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.android.popularmovies.adapters.MoviesAdapter;
 import com.example.android.popularmovies.adapters.TrailersAdapter;
+import com.example.android.popularmovies.data.MovieContract;
 import com.example.android.popularmovies.model.Movie;
 import com.example.android.popularmovies.utilities.MoviesJsonUtils;
 import com.example.android.popularmovies.utilities.NetworkUtils;
@@ -59,11 +65,13 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
     @BindView(R.id.btReview)
     Button btReview;
     @BindView(R.id.btFavorite)
-    Button btFavorite;
+    CheckBox btFavorite;
+
 
     private Movie movie;
     private int mMovieId;
     private TrailersAdapter mTrailersAdapter;
+    private boolean isMarkedFavorite;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,7 +87,18 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         Picasso.with(this).load(MoviesAdapter.BASE_IMAGE_URL + movie.getmImageUrl()).into(ivDetail);
         tvDate.setText(movie.getmDate().substring(0, 4));
         tvRating.setText(movie.getmRatings() + getString(R.string.OutOfTen));
-        tvReview.setText(movie.getmReview());
+        tvReview.setText(movie.getmOverview());
+        if (savedInstanceState != null) {
+            isMarkedFavorite = savedInstanceState.getBoolean("favoriteBtMarked");
+        } else {
+            mMovieId = movie.getmMovieId();
+            markedFavoriteStatus(MovieContract.MovieEntry.CONTENT_URI);
+        }
+        if(isMarkedFavorite){
+            btFavorite.setChecked(true);
+        }else {
+            btFavorite.setChecked(false);
+        }
 
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         recyclerViewTrailers.setLayoutManager(linearLayoutManager);
@@ -89,6 +108,12 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         recyclerViewTrailers.setAdapter(mTrailersAdapter);
         LoaderManager loaderManager = getSupportLoaderManager();
         loaderManager.initLoader(LOADER_FOR_TRAILER, null, this);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
     }
 
     @Override
@@ -165,8 +190,53 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
     }
 
     public void reviewClicked(View view) {
-        Intent intent= new Intent(this, ReviewsActivity.class);
+        Intent intent = new Intent(this, ReviewsActivity.class);
         intent.putExtra("movieId", mMovieId);
         startActivity(intent);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean("favoriteBtMarked", isMarkedFavorite);
+    }
+
+    public void favoriteClicked(View view) {
+        ContentResolver resolver = getContentResolver();
+        Uri uri = MovieContract.MovieEntry.CONTENT_URI;
+
+
+        markedFavoriteStatus(uri);
+
+        if (!isMarkedFavorite) {
+            ContentValues cv = new ContentValues();
+            cv.put(MovieContract.MovieEntry.COLUMN_MOVIE_ID, mMovieId);
+            cv.put(MovieContract.MovieEntry.COULMN_IMAGE_URL, movie.getmImageUrl());
+            cv.put(MovieContract.MovieEntry.COLUMN_DATE, movie.getmDate());
+            cv.put(MovieContract.MovieEntry.COLUMN_RATINGS, movie.getmRatings());
+            cv.put(MovieContract.MovieEntry.COLUMN_MOVIE_TITLE, movie.getmMovieTitle());
+            cv.put(MovieContract.MovieEntry.COLUMN_OVERVIEW, movie.getmOverview());
+
+            Uri returnedUri = resolver.insert(uri, cv);
+            Log.v(TAG, "Inserted uri: " + returnedUri);
+            //btFavorite.setBackgroundColor(getResources().getColor(R.color.green));
+            isMarkedFavorite = true;
+        } else {
+            int numberOfRows = resolver.delete(uri, MovieContract.MovieEntry.COLUMN_MOVIE_ID + "=?",
+                    new String[]{String.valueOf(mMovieId)});
+            //btFavorite.setBackgroundColor(getResources().getColor(R.color.lightGray));
+            Log.v(TAG, "Rows deleted " + numberOfRows);
+            isMarkedFavorite = false;
+        }
+
+
+    }
+
+    private void markedFavoriteStatus(Uri uri) {
+        Cursor cursor = getContentResolver().query(uri, null, MovieContract.MovieEntry.COLUMN_MOVIE_ID + "=?", new String[]{String.valueOf(mMovieId)}, null);
+        if (cursor != null && cursor.getCount() != 0)
+            isMarkedFavorite = true;
+        else
+            isMarkedFavorite = false;
     }
 }

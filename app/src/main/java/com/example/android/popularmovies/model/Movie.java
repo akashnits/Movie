@@ -6,20 +6,20 @@ import android.os.Parcelable;
 
 
 public class Movie implements Parcelable {
+    private int mMovieId;
     private String mImageUrl;
     private String mDate;
     private String mRatings;
     private String mMovieTitle;
-    private String mReview;
-    private int mMovieId;
+    private String mOverview;
 
-    public Movie(String mImageUrl, String mDate, String mRatings, String mMovieTitle, String mReview, int mMovieId) {
+    public Movie(int mMovieId, String mImageUrl, String mDate, String mRatings, String mMovieTitle, String mOverview) {
+        this.mMovieId = mMovieId;
         this.mImageUrl = mImageUrl;
         this.mDate = mDate;
         this.mRatings = mRatings;
         this.mMovieTitle = mMovieTitle;
-        this.mReview = mReview;
-        this.mMovieId= mMovieId;
+        this.mOverview = mOverview;
     }
 
     public String getmImageUrl() {
@@ -39,8 +39,8 @@ public class Movie implements Parcelable {
         return mMovieTitle;
     }
 
-    public String getmReview() {
-        return mReview;
+    public String getmOverview() {
+        return mOverview;
     }
 
     public int getmMovieId() {
@@ -58,7 +58,7 @@ public class Movie implements Parcelable {
         dest.writeString(this.mDate);
         dest.writeString(this.mRatings);
         dest.writeString(this.mMovieTitle);
-        dest.writeString(this.mReview);
+        dest.writeString(this.mOverview);
         dest.writeInt(this.mMovieId);
     }
 
@@ -67,7 +67,7 @@ public class Movie implements Parcelable {
         this.mDate = in.readString();
         this.mRatings = in.readString();
         this.mMovieTitle = in.readString();
-        this.mReview = in.readString();
+        this.mOverview = in.readString();
         this.mMovieId = in.readInt();
     }
 

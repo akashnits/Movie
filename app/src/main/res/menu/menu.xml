@@ -2,10 +2,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item android:id="@+id/topRated"
-        android:title="Top Rated"
+        android:title="@string/top_rated"
         android:orderInCategory="1"/>
 
     <item android:id="@+id/popularMovies"
-        android:title="Popular Movies"
+        android:title="@string/popular_movies"
         android:orderInCategory="2"/>
+
+    <item android:id="@+id/favoriteMovies"
+        android:title="@string/favorite_movies"
+        android:orderInCategory="3"/>
 </menu>

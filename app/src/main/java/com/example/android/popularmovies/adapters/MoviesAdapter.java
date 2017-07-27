@@ -21,7 +21,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
     private final onGridItemClickHandler mClickHandler;
 
     public static final String TAG= MoviesAdapter.class.getSimpleName();
-    public static final String BASE_IMAGE_URL= "http://image.tmdb.org/t/p/w342";
+    public static final String BASE_IMAGE_URL= "http://image.tmdb.org/t/p/w185";
 
 
 
@@ -47,7 +47,8 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
         String stringImageUrl= BASE_IMAGE_URL+ mMoviesData[position];
         holder.itemView.setTag(position);
         Log.v(TAG, "Image url to load: " + stringImageUrl);
-        Picasso.with(mContext).load(stringImageUrl).into(holder.imageView);
+        Picasso.with(mContext).load(stringImageUrl)
+                .into(holder.imageView);
     }
 
     @Override

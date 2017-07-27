@@ -3,4 +3,10 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+    <color name="black">#000000</color>
+    <color name="reviewColor">#3a3a38</color>
+    <color name="ratingColor">#232322</color>
+    <color name="movieNameColor">#7c7f7b</color>
+    <color name="lightGray">#BDBDBD</color>
+    <color name="green">#00FF00</color>
 </resources>
