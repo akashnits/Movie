@@ -20,7 +20,7 @@ public final class NetworkUtils {
 
     private static final String format= "json";
 
-    private static final String key= "676eeceb42c83ae99f98f7683077a7de";
+    private static final String key= "YOUR_API_KEY_HERE";
 
     private static final String language= "en-US";
 
