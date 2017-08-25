@@ -1,25 +1,26 @@
 # PopularMovies
 
-Popular Movies Part 1 & 2 
+* Popular Movies Part 1 & 2 
+
+* An Android applicatoin to browse movies from  [The Movie Database](https://www.themoviedb.org/?language=en)
+
+### Features: 
+
+* Mainscreen loads the popular movies, favorite movies or top movies depending upon user selection
+
+* User is able to view and play trailers of the movie.
+
+* User is able to read reviews of a selected movie.
+
+* User can now mark a movie as a favorite in the details view by tapping a heart button. When a movie is marked as a "favorite", the movie information gets stored in a local database. So, even when there is no internet connection, users can see their favorites movies.
+
+* Existing sorting criteria has been modified to include an additional pivot to show their favorites collection.
 
 
-Features:
+### Libraries
 
-Mainscreen loads the popular movies, favorite movies or top movies depending upon user selection
-
-User is able to view and play trailers of the movie.
-
-User is able to read reviews of a selected movie.
-
-User can now mark a movie as a favorite in the details view by tapping a heart button. When a movie is marked as a "favorite", the movie information gets stored in a local database. So, even when there is no internet connection, users can see their favorites movies.
-
-Existing sorting criteria has been modified to include an additional pivot to show their favorites collection.
-
-
-Libraries:
-
-Piccasso
-Butterknife
+* Piccasso
+* Butterknife
 
 
 
