@@ -20,13 +20,13 @@ public final class NetworkUtils {
 
     private static final String format= "json";
 
-    private static final String key= "YOUR_API_KEY_HERE";
+    public static final String key= "676eeceb42c83ae99f98f7683077a7de";
 
-    private static final String language= "en-US";
+    public static final String language= "en-US";
 
 
-    private final static String QUERY_PARAM= "api_key";
-    private final static String LANGUAGE_PARAM= "language";
+    public final static String QUERY_PARAM= "api_key";
+    public final static String LANGUAGE_PARAM= "language";
 
     public static URL buildUrl(String path){
         Uri builtUri= Uri.parse(MOVIES_BASE_URL + path).buildUpon()

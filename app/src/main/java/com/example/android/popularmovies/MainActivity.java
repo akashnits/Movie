@@ -8,23 +8,34 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.example.android.popularmovies.adapters.MoviesAdapter;
 import com.example.android.popularmovies.model.Movie;
+import com.example.android.popularmovies.networkUtils.ApiClient;
+import com.example.android.popularmovies.networkUtils.ApiService;
+import com.example.android.popularmovies.pojo.Response;
 import com.example.android.popularmovies.utilities.MoviesJsonUtils;
 import com.example.android.popularmovies.utilities.NetworkUtils;
 
 import org.json.JSONException;
 
-import java.net.URL;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.Single;
+import io.reactivex.SingleEmitter;
+import io.reactivex.SingleOnSubscribe;
+import io.reactivex.SingleSource;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.functions.Function;
+import io.reactivex.observers.DisposableSingleObserver;
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<String[]>, MoviesAdapter.onGridItemClickHandler {
 
@@ -32,6 +43,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     private MoviesAdapter mMoviesAdapter;
     private static final int FORECAST_LOADER_ID = 0;
     private String moviesJsonString= null;
+    private ApiService apiService;
+    private CompositeDisposable disposable= new CompositeDisposable();
     @BindView(R.id.pb_loading_indicator)  ProgressBar mProgressBar;
     @BindView(R.id.recyclerview_movies)  RecyclerView mRecyclerView;
 
@@ -44,11 +57,14 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
       StaggeredGridLayoutManager staggeredGridLayoutManager= new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
 
+        apiService= ApiClient.getClient().create(ApiService.class);
+
         mRecyclerView.setLayoutManager(staggeredGridLayoutManager);
         mRecyclerView.setAdapter(mMoviesAdapter);
         LoaderManager loaderManager= getSupportLoaderManager();
         loaderManager.initLoader(FORECAST_LOADER_ID, null, this);
     }
+
 
     @Override
     public Loader<String[]> onCreateLoader(int id, final Bundle args) {
@@ -68,7 +84,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
             @Override
             public String[] loadInBackground() {
-                URL url= null;
+                /*URL url= null;
                 if(args != null) {
                     url = NetworkUtils.buildUrl(args.getString(getResources().getString(R.string.urlPath)));
                 }else {
@@ -82,7 +98,53 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 }catch (Exception e){
                     e.printStackTrace();
                     return null;
+                }*/
+                if(args == null || TextUtils.equals(args.getString(getResources().getString(R.string.urlPath)), getString(R.string.popularMovies))) {
+                    disposable.add(apiService
+                            .getPopularMovies(NetworkUtils.key, NetworkUtils.language)
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .flatMap(new Function<Response, SingleSource<String[]>>() {
+                                @Override
+                                public SingleSource<String[]> apply(Response movie) throws Exception {
+                                    return getImageUrls(movie);
+                                }
+                            })
+                            .subscribeWith(new DisposableSingleObserver<String[]>() {
+                                @Override
+                                public void onSuccess(String[] strings) {
+                                    mMoviesData = strings;
+                                    deliverResult(mMoviesData);
+                                }
+
+                                @Override
+                                public void onError(Throwable e) {
+                                    Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                            }));
+                }else if (TextUtils.equals(args.getString(getResources().getString(R.string.urlPath)), getString(R.string.top_rated))){
+                    disposable.add(apiService
+                            .getTopRatedMovies( NetworkUtils.key, NetworkUtils.language)
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .flatMap(new Function<Response, SingleSource<String[]>>() {
+                                @Override
+                                public SingleSource<String[]> apply(Response movie) throws Exception {
+                                    return getImageUrls(movie);
+                                }
+                            })
+                            .subscribeWith(new DisposableSingleObserver<String[]>() {
+                                @Override
+                                public void onSuccess(String[] strings) {
+                                    mMoviesData = strings;
+                                    deliverResult(mMoviesData);
+                                }
+
+                                @Override
+                                public void onError(Throwable e) {
+                                    Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                            }));
                 }
+                return mMoviesData;
             }
 
             @Override
@@ -93,10 +155,27 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         };
     }
 
+    private Single<String[]> getImageUrls(Response movies){
+        final String[] moviesImageUrl= new String[movies.getResults().size()];
+
+        for(int i=0; i < movies.getResults().size(); i++){
+            moviesImageUrl[i] = movies.getResults().get(i).getPosterPath();
+        }
+        return Single.create(new SingleOnSubscribe<String[]>() {
+            @Override
+            public void subscribe(SingleEmitter<String[]> emitter) throws Exception {
+                if(!emitter.isDisposed()){
+                    emitter.onSuccess(moviesImageUrl);
+                }
+            }
+        });
+    }
+
     @Override
     public void onLoadFinished(Loader<String[]> loader, String[] data) {
         mProgressBar.setVisibility(View.INVISIBLE);
-        mMoviesAdapter.setMoviesData(data);
+        if(data != null)
+            mMoviesAdapter.setMoviesData(data);
     }
 
     @Override
@@ -144,5 +223,11 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             default:break;
         }
         return true;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        disposable.dispose();
     }
 }
