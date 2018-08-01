@@ -5,7 +5,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
-import android.support.v4.app.NavUtils;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBar;
@@ -16,11 +15,10 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import com.example.android.popularmovies.adapters.MoviesCursorAdapter;
 import com.example.android.popularmovies.data.MovieContract;
-import com.example.android.popularmovies.model.Movie;
+import com.example.android.popularmovies.model.Movies;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -117,7 +115,7 @@ public class FavoritesActivity extends AppCompatActivity implements LoaderManage
         );
         if(cursor != null){
             cursor.moveToNext();
-            Movie movie= new Movie(cursor.getInt(INDEX_MOVIE_ID), cursor.getString(INDEX_IMAGE_URL), cursor.getString(INDEX_DATE),
+            Movies movie= new Movies(cursor.getInt(INDEX_MOVIE_ID), cursor.getString(INDEX_IMAGE_URL), cursor.getString(INDEX_DATE),
                     cursor.getString(INDEX_RATINGS), cursor.getString(INDEX_MOVIE_TITLE), cursor.getString(INDEX_OVERVIEW));
             Intent movieDetailsIntent = new Intent(this, MovieDetailActivity.class);
             movieDetailsIntent.putExtra(getString(R.string.MovieDataDetails), movie);

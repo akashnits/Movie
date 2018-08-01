@@ -5,7 +5,6 @@ import android.content.Context;
 import android.util.Log;
 
 import com.example.android.popularmovies.R;
-import com.example.android.popularmovies.model.Movie;
 import com.example.android.popularmovies.model.Review;
 
 import org.json.JSONArray;
@@ -82,7 +81,7 @@ public final class MoviesJsonUtils {
     }
 
 
-    public static Movie getMovieDetailsFromJson(Context context, int position) throws JSONException {
+   /* public static Movie getMovieDetailsFromJson(Context context, int position) throws JSONException {
         JSONObject movieObject = resultsArray.getJSONObject(position);
         String imageUrl = movieObject.getString(OWN_POSTER_PATH);
         String date = movieObject.getString(context.getResources().getString(R.string.ReleaseDate));
@@ -92,7 +91,7 @@ public final class MoviesJsonUtils {
         int id = movieObject.getInt("id");
 
         return new Movie(id, imageUrl, date, ratings, title, review);
-    }
+    }*/
 
 
 }

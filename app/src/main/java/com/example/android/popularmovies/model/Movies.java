@@ -1,11 +1,15 @@
-package com.example.android.popularmovies.pojo;
+package com.example.android.popularmovies.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Generated;
 import com.google.gson.annotations.SerializedName;
 
 @Generated("com.robohorse.robopojogenerator")
-public class Movies {
+public class Movies implements Parcelable {
 
 	@SerializedName("overview")
 	private String overview;
@@ -162,23 +166,95 @@ public class Movies {
 	}
 
 	@Override
- 	public String toString(){
-		return 
-			"Movies{" +
-			"overview = '" + overview + '\'' + 
-			",original_language = '" + originalLanguage + '\'' + 
-			",original_title = '" + originalTitle + '\'' + 
-			",video = '" + video + '\'' + 
-			",title = '" + title + '\'' + 
-			",genre_ids = '" + genreIds + '\'' + 
-			",poster_path = '" + posterPath + '\'' + 
-			",backdrop_path = '" + backdropPath + '\'' + 
-			",release_date = '" + releaseDate + '\'' + 
-			",vote_average = '" + voteAverage + '\'' + 
-			",popularity = '" + popularity + '\'' + 
-			",id = '" + id + '\'' + 
-			",adult = '" + adult + '\'' + 
-			",vote_count = '" + voteCount + '\'' + 
-			"}";
+	public String toString(){
+		return
+				"Movies{" +
+						"overview = '" + overview + '\'' +
+						",original_language = '" + originalLanguage + '\'' +
+						",original_title = '" + originalTitle + '\'' +
+						",video = '" + video + '\'' +
+						",title = '" + title + '\'' +
+						",genre_ids = '" + genreIds + '\'' +
+						",poster_path = '" + posterPath + '\'' +
+						",backdrop_path = '" + backdropPath + '\'' +
+						",release_date = '" + releaseDate + '\'' +
+						",vote_average = '" + voteAverage + '\'' +
+						",popularity = '" + popularity + '\'' +
+						",id = '" + id + '\'' +
+						",adult = '" + adult + '\'' +
+						",vote_count = '" + voteCount + '\'' +
+						"}";
+	}
+
+	public Movies(int mMovieId, String mImageUrl, String mDate, String mRatings, String mMovieTitle, String mOverview) {
+		this.id = mMovieId;
+		this.posterPath = mImageUrl;
+		this.releaseDate = mDate;
+		this.voteAverage = Double.parseDouble(mRatings);
+		this.title = mMovieTitle;
+		this.overview = mOverview;
+	}
+
+	protected Movies(Parcel in) {
+		overview = in.readString();
+		originalLanguage = in.readString();
+		originalTitle = in.readString();
+		video = in.readByte() != 0x00;
+		title = in.readString();
+		if (in.readByte() == 0x01) {
+			genreIds = new ArrayList<Integer>();
+			in.readList(genreIds, Integer.class.getClassLoader());
+		} else {
+			genreIds = null;
 		}
+		posterPath = in.readString();
+		backdropPath = in.readString();
+		releaseDate = in.readString();
+		voteAverage = in.readDouble();
+		popularity = in.readDouble();
+		id = in.readInt();
+		adult = in.readByte() != 0x00;
+		voteCount = in.readInt();
+	}
+
+	@Override
+	public int describeContents() {
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		dest.writeString(overview);
+		dest.writeString(originalLanguage);
+		dest.writeString(originalTitle);
+		dest.writeByte((byte) (video ? 0x01 : 0x00));
+		dest.writeString(title);
+		if (genreIds == null) {
+			dest.writeByte((byte) (0x00));
+		} else {
+			dest.writeByte((byte) (0x01));
+			dest.writeList(genreIds);
+		}
+		dest.writeString(posterPath);
+		dest.writeString(backdropPath);
+		dest.writeString(releaseDate);
+		dest.writeDouble(voteAverage);
+		dest.writeDouble(popularity);
+		dest.writeInt(id);
+		dest.writeByte((byte) (adult ? 0x01 : 0x00));
+		dest.writeInt(voteCount);
+	}
+
+	@SuppressWarnings("unused")
+	public static final Parcelable.Creator<Movies> CREATOR = new Parcelable.Creator<Movies>() {
+		@Override
+		public Movies createFromParcel(Parcel in) {
+			return new Movies(in);
+		}
+
+		@Override
+		public Movies[] newArray(int size) {
+			return new Movies[size];
+		}
+	};
 }

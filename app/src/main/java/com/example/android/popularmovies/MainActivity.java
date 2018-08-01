@@ -1,30 +1,25 @@
 package com.example.android.popularmovies;
 
 import android.content.Intent;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.AsyncTaskLoader;
-import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.example.android.popularmovies.adapters.MoviesAdapter;
-import com.example.android.popularmovies.model.Movie;
 import com.example.android.popularmovies.networkUtils.ApiClient;
 import com.example.android.popularmovies.networkUtils.ApiService;
-import com.example.android.popularmovies.pojo.Response;
-import com.example.android.popularmovies.utilities.MoviesJsonUtils;
+import com.example.android.popularmovies.model.Movies;
+import com.example.android.popularmovies.model.Response;
 import com.example.android.popularmovies.utilities.NetworkUtils;
 
-import org.json.JSONException;
+import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -36,17 +31,20 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.functions.Function;
 import io.reactivex.observers.DisposableSingleObserver;
+import io.reactivex.schedulers.Schedulers;
 
-public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<String[]>, MoviesAdapter.onGridItemClickHandler {
+public class MainActivity extends AppCompatActivity implements MoviesAdapter.onGridItemClickHandler {
 
 
     private MoviesAdapter mMoviesAdapter;
-    private static final int FORECAST_LOADER_ID = 0;
-    private String moviesJsonString= null;
     private ApiService apiService;
+    private List<Movies> mMoviesList= new ArrayList<>();
     private CompositeDisposable disposable= new CompositeDisposable();
-    @BindView(R.id.pb_loading_indicator)  ProgressBar mProgressBar;
-    @BindView(R.id.recyclerview_movies)  RecyclerView mRecyclerView;
+
+    @BindView(R.id.pb_loading_indicator)
+    ProgressBar mProgressBar;
+    @BindView(R.id.recyclerview_movies)
+    RecyclerView mRecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,98 +59,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
         mRecyclerView.setLayoutManager(staggeredGridLayoutManager);
         mRecyclerView.setAdapter(mMoviesAdapter);
-        LoaderManager loaderManager= getSupportLoaderManager();
-        loaderManager.initLoader(FORECAST_LOADER_ID, null, this);
-    }
 
-
-    @Override
-    public Loader<String[]> onCreateLoader(int id, final Bundle args) {
-        return new AsyncTaskLoader<String[]>(this) {
-            String[] mMoviesData= null;
-            @Override
-            protected void onStartLoading() {
-                super.onStartLoading();
-                if(mMoviesData == null){
-                mProgressBar.setVisibility(View.VISIBLE);
-                forceLoad();
-                }
-                else{
-                deliverResult(mMoviesData);
-                }
-            }
-
-            @Override
-            public String[] loadInBackground() {
-                /*URL url= null;
-                if(args != null) {
-                    url = NetworkUtils.buildUrl(args.getString(getResources().getString(R.string.urlPath)));
-                }else {
-                    url= NetworkUtils.buildUrl(getResources().getString(R.string.popularMovies));
-                }
-
-                try{
-                    moviesJsonString= NetworkUtils.getResponseFromHttpUrl(url);
-                    String[] simpleJsonMoviesData= MoviesJsonUtils.getMoviePosterStringsFromJson(MainActivity.this, moviesJsonString);
-                    return simpleJsonMoviesData;
-                }catch (Exception e){
-                    e.printStackTrace();
-                    return null;
-                }*/
-                if(args == null || TextUtils.equals(args.getString(getResources().getString(R.string.urlPath)), getString(R.string.popularMovies))) {
-                    disposable.add(apiService
-                            .getPopularMovies(NetworkUtils.key, NetworkUtils.language)
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .flatMap(new Function<Response, SingleSource<String[]>>() {
-                                @Override
-                                public SingleSource<String[]> apply(Response movie) throws Exception {
-                                    return getImageUrls(movie);
-                                }
-                            })
-                            .subscribeWith(new DisposableSingleObserver<String[]>() {
-                                @Override
-                                public void onSuccess(String[] strings) {
-                                    mMoviesData = strings;
-                                    deliverResult(mMoviesData);
-                                }
-
-                                @Override
-                                public void onError(Throwable e) {
-                                    Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
-                                }
-                            }));
-                }else if (TextUtils.equals(args.getString(getResources().getString(R.string.urlPath)), getString(R.string.top_rated))){
-                    disposable.add(apiService
-                            .getTopRatedMovies( NetworkUtils.key, NetworkUtils.language)
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .flatMap(new Function<Response, SingleSource<String[]>>() {
-                                @Override
-                                public SingleSource<String[]> apply(Response movie) throws Exception {
-                                    return getImageUrls(movie);
-                                }
-                            })
-                            .subscribeWith(new DisposableSingleObserver<String[]>() {
-                                @Override
-                                public void onSuccess(String[] strings) {
-                                    mMoviesData = strings;
-                                    deliverResult(mMoviesData);
-                                }
-
-                                @Override
-                                public void onError(Throwable e) {
-                                    Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
-                                }
-                            }));
-                }
-                return mMoviesData;
-            }
-
-            @Override
-            public void deliverResult(String[] data) {
-                mMoviesData= data;
-                super.deliverResult(data);
-            }
-        };
+        loadPopularMovies();
     }
 
     private Single<String[]> getImageUrls(Response movies){
@@ -172,25 +80,9 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     }
 
     @Override
-    public void onLoadFinished(Loader<String[]> loader, String[] data) {
-        mProgressBar.setVisibility(View.INVISIBLE);
-        if(data != null)
-            mMoviesAdapter.setMoviesData(data);
-    }
-
-    @Override
-    public void onLoaderReset(Loader<String[]> loader) {
-
-    }
-
-    @Override
     public void onGridItemClick(int position) {
-        Movie movie= null;
-        try {
-            movie = MoviesJsonUtils.getMovieDetailsFromJson(this, position);
-        }catch (JSONException e){
-            e.printStackTrace();
-        }
+        Movies movie= mMoviesList.get(position);
+
         Intent movieDetailsIntent = new Intent(this, MovieDetailActivity.class);
         movieDetailsIntent.putExtra(getString(R.string.MovieDataDetails), movie);
         startActivity(movieDetailsIntent);
@@ -205,15 +97,12 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        Bundle args=new Bundle();
         switch (item.getItemId()){
             case R.id.popularMovies:
-                args.putString(getString(R.string.urlPath), getString(R.string.popularMovies));
-                getSupportLoaderManager().restartLoader(FORECAST_LOADER_ID, args, MainActivity.this);
+                loadPopularMovies();
                 break;
             case R.id.topRated:
-                args.putString(getString(R.string.urlPath), getString(R.string.topRated));
-                getSupportLoaderManager().restartLoader(FORECAST_LOADER_ID, args, MainActivity.this);
+                loadTopRatedMovies();
                 break;
             case R.id.favoriteMovies:
                 Intent intent= new Intent(this, FavoritesActivity.class);
@@ -223,6 +112,58 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             default:break;
         }
         return true;
+    }
+
+    private void loadPopularMovies(){
+        disposable.add(apiService
+                .getPopularMovies(NetworkUtils.key, NetworkUtils.language)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .flatMap(new Function<Response, SingleSource<String[]>>() {
+                    @Override
+                    public SingleSource<String[]> apply(Response movie) throws Exception {
+                        mMoviesList.clear();;
+                        mMoviesList.addAll(movie.getResults());
+                        return getImageUrls(movie);
+                    }
+                })
+                .subscribeWith(new DisposableSingleObserver<String[]>() {
+                    @Override
+                    public void onSuccess(String[] strings) {
+                        mMoviesAdapter.setMoviesData(strings);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                }));
+    }
+
+    private void loadTopRatedMovies(){
+        disposable.add(apiService
+                .getTopRatedMovies( NetworkUtils.key, NetworkUtils.language)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .flatMap(new Function<Response, SingleSource<String[]>>() {
+                    @Override
+                    public SingleSource<String[]> apply(Response movie) throws Exception {
+                        mMoviesList.clear();;
+                        mMoviesList.addAll(movie.getResults());
+                        return getImageUrls(movie);
+                    }
+                })
+                .subscribeWith(new DisposableSingleObserver<String[]>() {
+                    @Override
+                    public void onSuccess(String[] strings) {
+                        mMoviesAdapter.setMoviesData(strings);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                }));
     }
 
     @Override

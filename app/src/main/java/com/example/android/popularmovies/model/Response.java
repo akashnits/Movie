@@ -1,4 +1,4 @@
-package com.example.android.popularmovies.pojo;
+package com.example.android.popularmovies.model;
 
 import java.util.List;
 import javax.annotation.Generated;

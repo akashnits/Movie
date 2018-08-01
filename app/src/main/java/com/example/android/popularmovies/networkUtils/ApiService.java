@@ -1,6 +1,6 @@
 package com.example.android.popularmovies.networkUtils;
 
-import com.example.android.popularmovies.pojo.Response;
+import com.example.android.popularmovies.model.Response;
 
 import io.reactivex.Single;
 import retrofit2.http.GET;

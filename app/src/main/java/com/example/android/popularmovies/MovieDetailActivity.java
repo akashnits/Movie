@@ -25,7 +25,7 @@ import android.widget.TextView;
 import com.example.android.popularmovies.adapters.MoviesAdapter;
 import com.example.android.popularmovies.adapters.TrailersAdapter;
 import com.example.android.popularmovies.data.MovieContract;
-import com.example.android.popularmovies.model.Movie;
+import com.example.android.popularmovies.model.Movies;
 import com.example.android.popularmovies.utilities.MoviesJsonUtils;
 import com.example.android.popularmovies.utilities.NetworkUtils;
 import com.squareup.picasso.Picasso;
@@ -68,7 +68,7 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
     CheckBox btFavorite;
 
 
-    private Movie movie;
+    private Movies movie;
     private int mMovieId;
     private TrailersAdapter mTrailersAdapter;
     private boolean isMarkedFavorite;
@@ -83,15 +83,15 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
         movie = getIntent().getParcelableExtra(getString(R.string.MovieData));
-        tvMovieName.setText(movie.getmMovieTitle());
-        Picasso.with(this).load(MoviesAdapter.BASE_IMAGE_URL + movie.getmImageUrl()).into(ivDetail);
-        tvDate.setText(movie.getmDate().substring(0, 4));
-        tvRating.setText(movie.getmRatings() + getString(R.string.OutOfTen));
-        tvReview.setText(movie.getmOverview());
+        tvMovieName.setText(movie.getTitle());
+        Picasso.with(this).load(MoviesAdapter.BASE_IMAGE_URL + movie.getPosterPath()).into(ivDetail);
+        tvDate.setText(movie.getReleaseDate().substring(0, 4));
+        tvRating.setText(movie.getVoteAverage() + getString(R.string.OutOfTen));
+        tvReview.setText(movie.getOverview());
         if (savedInstanceState != null) {
             isMarkedFavorite = savedInstanceState.getBoolean("favoriteBtMarked");
         } else {
-            mMovieId = movie.getmMovieId();
+            mMovieId = movie.getId();
             markedFavoriteStatus(MovieContract.MovieEntry.CONTENT_URI);
         }
         if(isMarkedFavorite){
@@ -133,7 +133,7 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
             @Override
             public String[] loadInBackground() {
                 URL url;
-                mMovieId = movie.getmMovieId();
+                mMovieId = movie.getId();
                 String path = "/" + mMovieId + "/videos";
                 url = NetworkUtils.buildUrl(path);
 
@@ -211,11 +211,11 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         if (!isMarkedFavorite) {
             ContentValues cv = new ContentValues();
             cv.put(MovieContract.MovieEntry.COLUMN_MOVIE_ID, mMovieId);
-            cv.put(MovieContract.MovieEntry.COULMN_IMAGE_URL, movie.getmImageUrl());
-            cv.put(MovieContract.MovieEntry.COLUMN_DATE, movie.getmDate());
-            cv.put(MovieContract.MovieEntry.COLUMN_RATINGS, movie.getmRatings());
-            cv.put(MovieContract.MovieEntry.COLUMN_MOVIE_TITLE, movie.getmMovieTitle());
-            cv.put(MovieContract.MovieEntry.COLUMN_OVERVIEW, movie.getmOverview());
+            cv.put(MovieContract.MovieEntry.COULMN_IMAGE_URL, movie.getPosterPath());
+            cv.put(MovieContract.MovieEntry.COLUMN_DATE, movie.getReleaseDate());
+            cv.put(MovieContract.MovieEntry.COLUMN_RATINGS, movie.getVoteAverage());
+            cv.put(MovieContract.MovieEntry.COLUMN_MOVIE_TITLE, movie.getTitle());
+            cv.put(MovieContract.MovieEntry.COLUMN_OVERVIEW, movie.getOverview());
 
             Uri returnedUri = resolver.insert(uri, cv);
             Log.v(TAG, "Inserted uri: " + returnedUri);
