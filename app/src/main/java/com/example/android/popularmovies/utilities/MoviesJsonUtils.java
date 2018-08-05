@@ -75,7 +75,7 @@ public final class MoviesJsonUtils {
             JSONObject reviewDetails = resultsArrayReviews.getJSONObject(i);
             String author= reviewDetails.getString("author");
             String content= reviewDetails.getString("content");
-            reviewsList.add(i, new Review(author, content));
+            //reviewsList.add(i, new Review(author, content));
         }
         return reviewsList;
     }

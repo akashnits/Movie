@@ -1,5 +1,6 @@
 package com.example.android.popularmovies;
 
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -12,14 +13,12 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.example.android.popularmovies.adapters.MoviesAdapter;
+import com.example.android.popularmovies.data.MoviesViewModel;
 import com.example.android.popularmovies.networkUtils.ApiClient;
 import com.example.android.popularmovies.networkUtils.ApiService;
 import com.example.android.popularmovies.model.Movies;
 import com.example.android.popularmovies.model.Response;
 import com.example.android.popularmovies.utilities.NetworkUtils;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -38,8 +37,8 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.onG
 
     private MoviesAdapter mMoviesAdapter;
     private ApiService apiService;
-    private List<Movies> mMoviesList= new ArrayList<>();
     private CompositeDisposable disposable= new CompositeDisposable();
+    private MoviesViewModel mMoviesViewModel;
 
     @BindView(R.id.pb_loading_indicator)
     ProgressBar mProgressBar;
@@ -53,22 +52,25 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.onG
         ButterKnife.bind(this);
         mMoviesAdapter= new MoviesAdapter(this, this);
 
-      StaggeredGridLayoutManager staggeredGridLayoutManager= new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
+        StaggeredGridLayoutManager staggeredGridLayoutManager= new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
 
         apiService= ApiClient.getClient().create(ApiService.class);
 
         mRecyclerView.setLayoutManager(staggeredGridLayoutManager);
         mRecyclerView.setAdapter(mMoviesAdapter);
 
-        loadPopularMovies();
+        mMoviesViewModel= ViewModelProviders.of(this).get(MoviesViewModel.class);
+        if(mMoviesViewModel.getResponse() == null) {
+            loadPopularMovies();
+        }else {
+            String[] movieImageUrls = getImageUrls(mMoviesViewModel.getResponse());
+            mMoviesAdapter.setMoviesData(movieImageUrls);
+        }
     }
 
-    private Single<String[]> getImageUrls(Response movies){
-        final String[] moviesImageUrl= new String[movies.getResults().size()];
+    private Single<String[]> getImageUrlObservable(Response response){
+        final String[] moviesImageUrl= getImageUrls(response);
 
-        for(int i=0; i < movies.getResults().size(); i++){
-            moviesImageUrl[i] = movies.getResults().get(i).getPosterPath();
-        }
         return Single.create(new SingleOnSubscribe<String[]>() {
             @Override
             public void subscribe(SingleEmitter<String[]> emitter) throws Exception {
@@ -79,10 +81,18 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.onG
         });
     }
 
+    private String[] getImageUrls(Response response){
+        final String[] moviesImageUrl= new String[response.getResults().size()];
+
+        for(int i=0; i < response.getResults().size(); i++){
+            moviesImageUrl[i] = response.getResults().get(i).getPosterPath();
+        }
+        return moviesImageUrl;
+    }
+
     @Override
     public void onGridItemClick(int position) {
-        Movies movie= mMoviesList.get(position);
-
+        Movies movie= mMoviesViewModel.getResponse().getResults().get(position);
         Intent movieDetailsIntent = new Intent(this, MovieDetailActivity.class);
         movieDetailsIntent.putExtra(getString(R.string.MovieDataDetails), movie);
         startActivity(movieDetailsIntent);
@@ -122,9 +132,8 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.onG
                 .flatMap(new Function<Response, SingleSource<String[]>>() {
                     @Override
                     public SingleSource<String[]> apply(Response movie) throws Exception {
-                        mMoviesList.clear();;
-                        mMoviesList.addAll(movie.getResults());
-                        return getImageUrls(movie);
+                        mMoviesViewModel.setResponse(movie);
+                        return getImageUrlObservable(movie);
                     }
                 })
                 .subscribeWith(new DisposableSingleObserver<String[]>() {
@@ -148,9 +157,8 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.onG
                 .flatMap(new Function<Response, SingleSource<String[]>>() {
                     @Override
                     public SingleSource<String[]> apply(Response movie) throws Exception {
-                        mMoviesList.clear();;
-                        mMoviesList.addAll(movie.getResults());
-                        return getImageUrls(movie);
+                        mMoviesViewModel.setResponse(movie);
+                        return getImageUrlObservable(movie);
                     }
                 })
                 .subscribeWith(new DisposableSingleObserver<String[]>() {

@@ -16,22 +16,33 @@ import android.widget.Toast;
 
 import com.example.android.popularmovies.adapters.ReviewsAdapter;
 import com.example.android.popularmovies.model.Review;
+import com.example.android.popularmovies.model.ReviewItem;
+import com.example.android.popularmovies.networkUtils.ApiClient;
+import com.example.android.popularmovies.networkUtils.ApiService;
 import com.example.android.popularmovies.utilities.MoviesJsonUtils;
 import com.example.android.popularmovies.utilities.NetworkUtils;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.functions.Function;
+import io.reactivex.observers.DisposableSingleObserver;
+import io.reactivex.schedulers.Schedulers;
 
-public class ReviewsActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<ArrayList<Review>> {
+public class ReviewsActivity extends AppCompatActivity {
 
     public static final int LOADER_ID_REVIEW = 123;
     @BindView(R.id.pb_loading_indicator)
     ProgressBar pbLoadingIndicator;
     private ReviewsAdapter mReviewAdapter;
     private int mMovieId;
+    private ApiService apiService;
+    private CompositeDisposable disposable= new CompositeDisposable();
 
     @BindView(R.id.rvReviewActivity)
     RecyclerView rvReviewActivity;
@@ -55,61 +66,37 @@ public class ReviewsActivity extends AppCompatActivity implements LoaderManager.
         mReviewAdapter = new ReviewsAdapter(this);
         rvReviewActivity.setAdapter(mReviewAdapter);
 
-        LoaderManager loaderManager = getSupportLoaderManager();
-        loaderManager.initLoader(LOADER_ID_REVIEW, null, this);
+        apiService= ApiClient.getClient().create(ApiService.class);
+        loadMovieReview();
     }
 
-    @Override
-    public Loader<ArrayList<Review>> onCreateLoader(int id, Bundle args) {
-        return new AsyncTaskLoader<ArrayList<Review>>(this) {
-            private ArrayList<Review> mReview = null;
+    private void loadMovieReview(){
+        disposable.add(apiService
+                .getMovieReviews(mMovieId, NetworkUtils.key, NetworkUtils.language)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(new Function<Review, List<ReviewItem>>() {
+                    @Override
+                    public List<ReviewItem> apply(Review review) throws Exception {
+                        return review.getResults();
+                    }
+                })
+                .subscribeWith(new DisposableSingleObserver<List<ReviewItem>>(){
+                    @Override
+                    public void onSuccess(List<ReviewItem> reviewItems) {
+                       mReviewAdapter.setData(reviewItems);
+                    }
 
-            @Override
-            protected void onStartLoading() {
-                pbLoadingIndicator.setVisibility(View.VISIBLE);
-                super.onStartLoading();
-                if (mReview != null)
-                    deliverResult(mReview);
-                else
-                    forceLoad();
-            }
-
-            @Override
-            public ArrayList<Review> loadInBackground() {
-                URL url = null;
-                String path = "/" + mMovieId + "/reviews";
-                url = NetworkUtils.buildUrl(path);
-                try {
-                    String reviewJSONString = NetworkUtils.getResponseFromHttpUrl(url);
-                    return MoviesJsonUtils.getReviewObjectsFromJSON(reviewJSONString);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                return null;
-            }
-
-            @Override
-            public void deliverResult(ArrayList<Review> data) {
-                mReview = data;
-                super.deliverResult(data);
-            }
-        };
-    }
-
-    @Override
-    public void onLoadFinished(Loader<ArrayList<Review>> loader, ArrayList<Review> data) {
-        pbLoadingIndicator.setVisibility(View.INVISIBLE);
-        if (data != null) {
-            mReviewAdapter.setData(data);
-        } else {
-            Toast.makeText(ReviewsActivity.this, "No Reviews", Toast.LENGTH_LONG).show();
-        }
-    }
-
-    @Override
-    public void onLoaderReset(Loader<ArrayList<Review>> loader) {
+                    @Override
+                    public void onError(Throwable e) {
+                        Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                })
+        );
 
     }
+
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {

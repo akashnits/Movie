@@ -1,32 +1,76 @@
 package com.example.android.popularmovies.model;
 
+import java.util.List;
+import javax.annotation.Generated;
+import com.google.gson.annotations.SerializedName;
 
+@Generated("com.robohorse.robopojogenerator")
+public class Review{
 
-public class Review {
-    private String mUsername;
-    private String mReview;
+	@SerializedName("id")
+	private int id;
 
-    public Review() {
-    }
+	@SerializedName("page")
+	private int page;
 
-    public Review(String mUsername, String mReview) {
-        this.mUsername = mUsername;
-        this.mReview = mReview;
-    }
+	@SerializedName("total_pages")
+	private int totalPages;
 
-    public String getmUsername() {
-        return mUsername;
-    }
+	@SerializedName("results")
+	private List<ReviewItem> results;
 
-    public void setmUsername(String mUsername) {
-        this.mUsername = mUsername;
-    }
+	@SerializedName("total_results")
+	private int totalResults;
 
-    public String getmReview() {
-        return mReview;
-    }
+	public void setId(int id){
+		this.id = id;
+	}
 
-    public void setmReview(String mReview) {
-        this.mReview = mReview;
-    }
+	public int getId(){
+		return id;
+	}
+
+	public void setPage(int page){
+		this.page = page;
+	}
+
+	public int getPage(){
+		return page;
+	}
+
+	public void setTotalPages(int totalPages){
+		this.totalPages = totalPages;
+	}
+
+	public int getTotalPages(){
+		return totalPages;
+	}
+
+	public void setResults(List<ReviewItem> results){
+		this.results = results;
+	}
+
+	public List<ReviewItem> getResults(){
+		return results;
+	}
+
+	public void setTotalResults(int totalResults){
+		this.totalResults = totalResults;
+	}
+
+	public int getTotalResults(){
+		return totalResults;
+	}
+
+	@Override
+ 	public String toString(){
+		return 
+			"Review{" + 
+			"id = '" + id + '\'' + 
+			",page = '" + page + '\'' + 
+			",total_pages = '" + totalPages + '\'' + 
+			",results = '" + results + '\'' + 
+			",total_results = '" + totalResults + '\'' + 
+			"}";
+		}
 }

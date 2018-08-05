@@ -10,8 +10,10 @@ import android.widget.TextView;
 
 import com.example.android.popularmovies.R;
 import com.example.android.popularmovies.model.Review;
+import com.example.android.popularmovies.model.ReviewItem;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -20,7 +22,7 @@ public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewsA
 
 
     private Context context;
-    private ArrayList<Review> mReview;
+    private List<ReviewItem> mReview;
 
     public ReviewsAdapter() {
     }
@@ -38,8 +40,8 @@ public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewsA
 
     @Override
     public void onBindViewHolder(ReviewsAdapterViewHolder holder, int position) {
-        holder.tvReview.setText(mReview.get(position).getmReview());
-        holder.tvUsername.setText(mReview.get(position).getmUsername());
+        holder.tvReview.setText(mReview.get(position).getContent());
+        holder.tvUsername.setText(mReview.get(position).getAuthor());
     }
 
     @Override
@@ -62,7 +64,7 @@ public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewsA
 
     }
 
-    public void setData(ArrayList<Review> review) {
+    public void setData(List<ReviewItem> review) {
         mReview= review;
         notifyDataSetChanged();
     }

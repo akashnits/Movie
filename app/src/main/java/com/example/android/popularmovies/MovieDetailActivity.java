@@ -1,5 +1,6 @@
 package com.example.android.popularmovies;
 
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -21,11 +22,17 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.android.popularmovies.adapters.MoviesAdapter;
 import com.example.android.popularmovies.adapters.TrailersAdapter;
 import com.example.android.popularmovies.data.MovieContract;
+import com.example.android.popularmovies.data.MovieDetailViewModel;
 import com.example.android.popularmovies.model.Movies;
+import com.example.android.popularmovies.model.Trailer;
+import com.example.android.popularmovies.model.TrailerItem;
+import com.example.android.popularmovies.networkUtils.ApiClient;
+import com.example.android.popularmovies.networkUtils.ApiService;
 import com.example.android.popularmovies.utilities.MoviesJsonUtils;
 import com.example.android.popularmovies.utilities.NetworkUtils;
 import com.squareup.picasso.Picasso;
@@ -33,11 +40,23 @@ import com.squareup.picasso.Picasso;
 import org.json.JSONException;
 
 import java.net.URL;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.Observable;
+import io.reactivex.Single;
+import io.reactivex.SingleEmitter;
+import io.reactivex.SingleOnSubscribe;
+import io.reactivex.SingleSource;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.functions.Function;
+import io.reactivex.observers.DisposableSingleObserver;
+import io.reactivex.schedulers.Schedulers;
+import retrofit2.Retrofit;
 
-public class MovieDetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<String[]>, TrailersAdapter.OnTrailerClickHandler {
+public class MovieDetailActivity extends AppCompatActivity implements TrailersAdapter.OnTrailerClickHandler {
 
     private static final int LOADER_FOR_TRAILER = 949;
 
@@ -72,6 +91,9 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
     private int mMovieId;
     private TrailersAdapter mTrailersAdapter;
     private boolean isMarkedFavorite;
+    private ApiService apiService;
+    private CompositeDisposable disposable= new CompositeDisposable();
+    private MovieDetailViewModel mMovieDetailViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,78 +122,70 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
             btFavorite.setChecked(false);
         }
 
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+
+        apiService= ApiClient.getClient().create(ApiService.class);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this,
+                LinearLayoutManager.VERTICAL, false);
         recyclerViewTrailers.setLayoutManager(linearLayoutManager);
         recyclerViewTrailers.hasFixedSize();
 
         mTrailersAdapter = new TrailersAdapter(this, this);
         recyclerViewTrailers.setAdapter(mTrailersAdapter);
-        LoaderManager loaderManager = getSupportLoaderManager();
-        loaderManager.initLoader(LOADER_FOR_TRAILER, null, this);
+        mMovieDetailViewModel= ViewModelProviders.of(this).get(MovieDetailViewModel.class);
+        if(mMovieDetailViewModel.getTrailer() == null)
+            loadMovieTrailers();
+        else {
+            mTrailersAdapter.setTrailersData(getTrailerNames(mMovieDetailViewModel.getTrailer()));
+        }
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
+    private void loadMovieTrailers(){
+        disposable.add(apiService.getMovieTrailers(mMovieId, NetworkUtils.key, NetworkUtils.language)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .flatMap(new Function<Trailer, SingleSource<String[]>>() {
+                    @Override
+                    public SingleSource<String[]> apply(Trailer trailer) throws Exception {
+                        mMovieDetailViewModel.setTrailer(trailer);
+                        return getTrailerNameObservable(trailer);
+                    }
+                }).subscribeWith(new DisposableSingleObserver<String[]>(){
+                    @Override
+                    public void onSuccess(String[] strings) {
+                        mTrailersAdapter.setTrailersData(strings);
+                    }
 
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+                })
+        );
     }
 
-    @Override
-    public Loader<String[]> onCreateLoader(int id, Bundle args) {
-        return new AsyncTaskLoader<String[]>(this) {
-            String[] trailersData = null;
-
+    public Single<String[]> getTrailerNameObservable(final Trailer trailer){
+        return Single.create(new SingleOnSubscribe<String[]>() {
             @Override
-            protected void onStartLoading() {
-                super.onStartLoading();
-                if (trailersData != null)
-                    deliverResult(trailersData);
-                else
-                    forceLoad();
+            public void subscribe(SingleEmitter<String[]> emitter) throws Exception {
+                if(!emitter.isDisposed())
+                    emitter.onSuccess(getTrailerNames(trailer));
             }
-
-            @Override
-            public String[] loadInBackground() {
-                URL url;
-                mMovieId = movie.getId();
-                String path = "/" + mMovieId + "/videos";
-                url = NetworkUtils.buildUrl(path);
-
-                try {
-                    String jsonStringForTrailers = NetworkUtils.getResponseFromHttpUrl(url);
-                    return MoviesJsonUtils.getTrailerStringsFromJSON(jsonStringForTrailers);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return null;
-                }
-            }
-
-            @Override
-            public void deliverResult(String[] data) {
-                trailersData = data;
-                super.deliverResult(data);
-            }
-        };
+        });
     }
 
-    @Override
-    public void onLoadFinished(Loader<String[]> loader, String[] data) {
-        mTrailersAdapter.setTrailersData(data);
-    }
-
-    @Override
-    public void onLoaderReset(Loader<String[]> loader) {
-
+    private String[] getTrailerNames(Trailer trailer){
+        String[] trailerNames= new String[trailer.getResults().size()];
+        List<TrailerItem> trailerItems= trailer.getResults();
+        for(int i=0; i< trailer.getResults().size(); i++){
+            trailerNames[i]= trailerItems.get(i).getName();
+        }
+        return trailerNames;
     }
 
     @Override
     public void onTrailerItemClickListener(int position) {
         String key = null;
-        try {
-            key = MoviesJsonUtils.getTrailerStringId(position);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        key= mMovieDetailViewModel.getTrailer().getResults().get(position).getKey();
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.youtube.com/watch?v=" + key));
         if (intent.resolveActivity(getPackageManager()) != null) {
             startActivity(Intent.createChooser(intent, "View Trailer"));
