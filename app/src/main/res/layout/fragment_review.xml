@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".fragments.ReviewFragment"
+    >
+
+  <android.support.v7.widget.RecyclerView
+      android:id="@+id/rvReview"
+      android:layout_width="368dp"
+      android:layout_height="wrap_content"
+      android:layout_marginLeft="8dp"
+      app:layout_constraintLeft_toLeftOf="parent"
+      android:layout_marginRight="8dp"
+      app:layout_constraintRight_toRightOf="parent"
+      app:layout_constraintTop_toTopOf="parent"
+      android:layout_marginTop="8dp" />
+
+  <ProgressBar
+      android:id="@+id/pb_loading_indicator"
+      android:layout_width="42dp"
+      android:layout_height="42dp"
+      android:layout_gravity="center"
+      android:visibility="invisible"
+      app:layout_constraintLeft_toLeftOf="parent"
+      app:layout_constraintRight_toRightOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/rvReview"/>
+
+</android.support.constraint.ConstraintLayout>
