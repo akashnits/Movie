@@ -15,7 +15,7 @@ import butterknife.BindView
 import butterknife.ButterKnife
 import kotlinx.android.synthetic.main.list_item_movies.view.imageView
 
-class MoviesAdapter(private val mContext: Context, private val mClickHandler: onGridItemClickHandler) : RecyclerView.Adapter<MoviesAdapter.MoviesAdapterViewHolder>() {
+class MoviesAdapter(private val mContext: Context?, private val mClickHandler: onGridItemClickHandler) : RecyclerView.Adapter<MoviesAdapter.MoviesAdapterViewHolder>() {
   private var mMoviesData: Array<String?>? = null
 
   companion object {

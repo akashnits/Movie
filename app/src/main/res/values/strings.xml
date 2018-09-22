@@ -1,17 +1,20 @@
 <resources>
-    <string name="app_name">PopularMovies</string>
-    <string name="urlPath">path</string>
-    <string name="popularMovies">/popular</string>
-    <string name="topRated">/top_rated</string>
-    <string name="ReleaseDate">release_date</string>
-    <string name="Popularity">popularity</string>
-    <string name="Vote">vote_average</string>
-    <string name="MovieTitle">title</string>
-    <string name="MovieOverview">overview</string>
-    <string name="MovieData">movieData</string>
-    <string name="OutOfTen">/10</string>
-    <string name="MovieDataDetails">movieData</string>
-    <string name="top_rated">Top Rated</string>
-    <string name="popular_movies">Popular Movies</string>
-    <string name="favorite_movies">Favorite Movies</string>
+  <string name="app_name">Movies</string>
+  <string name="urlPath">path</string>
+  <string name="popularMovies">/popular</string>
+  <string name="topRated">/top_rated</string>
+  <string name="ReleaseDate">release_date</string>
+  <string name="Popularity">popularity</string>
+  <string name="Vote">vote_average</string>
+  <string name="MovieTitle">title</string>
+  <string name="MovieOverview">overview</string>
+  <string name="MovieData">movieData</string>
+  <string name="OutOfTen">/10</string>
+  <string name="MovieDataDetails">movieData</string>
+  <string name="top_rated">Top Rated</string>
+  <string name="popular_movies">Popular Movies</string>
+  <string name="favorite_movies">Favorite Movies</string>
+
+  <!-- TODO: Remove or change this placeholder text -->
+  <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

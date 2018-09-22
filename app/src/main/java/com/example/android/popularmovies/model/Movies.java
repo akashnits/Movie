@@ -168,22 +168,22 @@ public class Movies implements Parcelable {
   @Override
   public String toString(){
     return
-    "Movies{" +
-        "overview = '" + overview + '\'' +
-        ",original_language = '" + originalLanguage + '\'' +
-        ",original_title = '" + originalTitle + '\'' +
-        ",video = '" + video + '\'' +
-        ",title = '" + title + '\'' +
-        ",genre_ids = '" + genreIds + '\'' +
-        ",poster_path = '" + posterPath + '\'' +
-        ",backdrop_path = '" + backdropPath + '\'' +
-        ",release_date = '" + releaseDate + '\'' +
-        ",vote_average = '" + voteAverage + '\'' +
-        ",popularity = '" + popularity + '\'' +
-        ",id = '" + id + '\'' +
-        ",adult = '" + adult + '\'' +
-        ",vote_count = '" + voteCount + '\'' +
-        "}";
+        "Movies{" +
+            "overview = '" + overview + '\'' +
+            ",original_language = '" + originalLanguage + '\'' +
+            ",original_title = '" + originalTitle + '\'' +
+            ",video = '" + video + '\'' +
+            ",title = '" + title + '\'' +
+            ",genre_ids = '" + genreIds + '\'' +
+            ",poster_path = '" + posterPath + '\'' +
+            ",backdrop_path = '" + backdropPath + '\'' +
+            ",release_date = '" + releaseDate + '\'' +
+            ",vote_average = '" + voteAverage + '\'' +
+            ",popularity = '" + popularity + '\'' +
+            ",id = '" + id + '\'' +
+            ",adult = '" + adult + '\'' +
+            ",vote_count = '" + voteCount + '\'' +
+            "}";
   }
 
   public Movies(int mMovieId, String mImageUrl, String mDate, String mRatings, String mMovieTitle, String mOverview) {
@@ -202,11 +202,11 @@ public class Movies implements Parcelable {
     video = in.readByte() != 0x00;
     title = in.readString();
     if (in.readByte() == 0x01) {
-    genreIds = new ArrayList<Integer>();
-    in.readList(genreIds, Integer.class.getClassLoader());
-  } else {
-    genreIds = null;
-  }
+      genreIds = new ArrayList<Integer>();
+      in.readList(genreIds, Integer.class.getClassLoader());
+    } else {
+      genreIds = null;
+    }
     posterPath = in.readString();
     backdropPath = in.readString();
     releaseDate = in.readString();

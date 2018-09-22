@@ -25,7 +25,7 @@ class ReviewsAdapter : RecyclerView.Adapter<ReviewsAdapter.ReviewsAdapterViewHol
 
   constructor() {}
 
-  constructor(context: Context) {
+  constructor(context: Context?) {
     this.context = context
   }
 

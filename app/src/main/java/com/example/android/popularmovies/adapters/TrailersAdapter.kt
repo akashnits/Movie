@@ -16,7 +16,7 @@ import butterknife.ButterKnife
 import kotlinx.android.synthetic.main.list_item_trailers.view.ivPlayButton
 import kotlinx.android.synthetic.main.list_item_trailers.view.tvTrailerName
 
-class TrailersAdapter(private var mContext: Context, private var mClickHandler: OnTrailerClickHandler) : RecyclerView.Adapter<TrailersAdapter.TrailersAdapterViewHolder>() {
+class TrailersAdapter(private var mContext: Context?, private var mClickHandler: OnTrailerClickHandler) : RecyclerView.Adapter<TrailersAdapter.TrailersAdapterViewHolder>() {
   private var mTrailerName: Array<String?>? = null
 
   interface OnTrailerClickHandler {

@@ -9,7 +9,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 
-import com.example.android.popularmovies.FavoritesActivity
 import com.example.android.popularmovies.R
 import com.example.android.popularmovies.data.MovieContract
 import com.example.android.popularmovies.displayUtilities.MoviesImageView
@@ -17,10 +16,12 @@ import com.squareup.picasso.Picasso
 
 import butterknife.BindView
 import butterknife.ButterKnife
+import com.example.android.popularmovies.fragments.FavoriteFragment
 import kotlinx.android.synthetic.main.list_item_movies.view.imageView
 import kotlinx.android.synthetic.main.list_item_movies.view.linearLayout
 
-class MoviesCursorAdapter(private val context: Context, private val mHandler: OnGridItemClickHandler) : RecyclerView.Adapter<MoviesCursorAdapter.FavoriteMoviesViewHolder>() {
+class MoviesCursorAdapter(private val context: Context?, private val mHandler: OnGridItemClickHandler)
+  : RecyclerView.Adapter<MoviesCursorAdapter.FavoriteMoviesViewHolder>() {
   private var mCursor: Cursor? = null
   companion object {
 
@@ -40,13 +41,13 @@ class MoviesCursorAdapter(private val context: Context, private val mHandler: On
 
   override fun onBindViewHolder(holder: FavoriteMoviesViewHolder, position: Int) {
     val moved = mCursor!!.moveToPosition(position)
-    if (moved) {
+    if (moved && !mCursor!!.isClosed) {
       val stringImageUrl =
-        MoviesAdapter.BASE_IMAGE_URL + mCursor!!.getString(FavoritesActivity.INDEX_IMAGE_URL)
+        MoviesAdapter.BASE_IMAGE_URL + mCursor!!.getString(FavoriteFragment.INDEX_IMAGE_URL)
       Picasso.with(context)
           .load(stringImageUrl)
           .into(holder.imageView)
-      holder.itemView.tag = mCursor!!.getInt(FavoritesActivity.INDEX_MOVIE_ID)
+      holder.itemView.tag = mCursor!!.getInt(FavoriteFragment.INDEX_MOVIE_ID)
       Log.v(TAG, "ImageUrl to load: $stringImageUrl")
     }
 

@@ -114,7 +114,7 @@
             />
 
         <android.support.v7.widget.RecyclerView
-                android:id="@+id/recyclerview_movie_trailers"
+                android:id="@+id/recyclerViewTrailers"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 app:layout_constraintTop_toBottomOf="@+id/tvTrailers"
