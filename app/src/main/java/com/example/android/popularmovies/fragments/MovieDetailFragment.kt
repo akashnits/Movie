@@ -1,6 +1,5 @@
 package com.example.android.popularmovies.fragments
 
-import android.arch.lifecycle.ViewModelProviders
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -17,27 +16,21 @@ import android.widget.Toast
 import com.example.android.popularmovies.R
 import com.example.android.popularmovies.adapters.MoviesAdapter
 import com.example.android.popularmovies.adapters.TrailersAdapter
+import com.example.android.popularmovies.contract.MovieDetailContract
+import com.example.android.popularmovies.contract.MovieDetailContract.Presenter
 import com.example.android.popularmovies.data.MovieContract
-import com.example.android.popularmovies.data.MovieDetailViewModel
 import com.example.android.popularmovies.model.Movies
-import com.example.android.popularmovies.model.Trailer
-import com.example.android.popularmovies.networkUtils.ApiClient
-import com.example.android.popularmovies.networkUtils.ApiService
-import com.example.android.popularmovies.utilities.NetworkUtils
+import com.example.android.popularmovies.presenter.MovieDetailPresenter
 import com.squareup.picasso.Picasso
-import io.reactivex.Single
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.observers.DisposableSingleObserver
-import io.reactivex.schedulers.Schedulers
-import kotlinx.android.synthetic.main.activity_detail.ivDetail
-import kotlinx.android.synthetic.main.activity_detail.recyclerViewTrailers
-import kotlinx.android.synthetic.main.activity_detail.tvDate
-import kotlinx.android.synthetic.main.activity_detail.tvMovieName
-import kotlinx.android.synthetic.main.activity_detail.tvRating
-import kotlinx.android.synthetic.main.activity_detail.tvReview
 import kotlinx.android.synthetic.main.fragment_movie_detail.btFavorite
 import kotlinx.android.synthetic.main.fragment_movie_detail.btReview
+import kotlinx.android.synthetic.main.fragment_movie_detail.ivDetail
+import kotlinx.android.synthetic.main.fragment_movie_detail.recyclerViewTrailers
+import kotlinx.android.synthetic.main.fragment_movie_detail.tvDate
+import kotlinx.android.synthetic.main.fragment_movie_detail.tvMovieName
+import kotlinx.android.synthetic.main.fragment_movie_detail.tvRating
+import kotlinx.android.synthetic.main.fragment_movie_detail.tvReview
 
 /**
  * A simple [Fragment] subclass.
@@ -46,15 +39,14 @@ import kotlinx.android.synthetic.main.fragment_movie_detail.btReview
  *
  */
 
-class MovieDetailFragment : Fragment(), TrailersAdapter.OnTrailerClickHandler  {
+class MovieDetailFragment : Fragment(), TrailersAdapter.OnTrailerClickHandler, MovieDetailContract.View  {
   private var movie: Movies? = null
   private var mMovieId: Int = 0
   private var mTrailersAdapter: TrailersAdapter? = null
   private var isMarkedFavorite: Boolean = false
-  private var apiService: ApiService? = null
   private val disposable = CompositeDisposable()
-  private var mMovieDetailViewModel: MovieDetailViewModel? = null
   private var mContext: Context? =null
+  private var mMovieDetailPresenter: MovieDetailContract.Presenter?= null
 
   companion object {
     /**
@@ -77,14 +69,15 @@ class MovieDetailFragment : Fragment(), TrailersAdapter.OnTrailerClickHandler  {
     arguments?.let {
       movie = it.getParcelable("movieData")
     }
+    mMovieDetailPresenter= MovieDetailPresenter(this)
+    mMovieDetailPresenter?.setUpDisposable(disposable)
+
     mMovieId = movie!!.id
     if (savedInstanceState != null) {
       isMarkedFavorite = savedInstanceState.getBoolean("favoriteBtMarked")
     } else {
       markedFavoriteStatus(MovieContract.MovieEntry.CONTENT_URI)
     }
-    apiService = ApiClient.client
-        .create<ApiService>(ApiService::class.java)
     setHasOptionsMenu(true)
     mTrailersAdapter = TrailersAdapter(mContext, this)
   }
@@ -104,13 +97,11 @@ class MovieDetailFragment : Fragment(), TrailersAdapter.OnTrailerClickHandler  {
   ) {
     super.onViewCreated(view, savedInstanceState)
     initViews()
-    initViewModel()
-    populateViews(savedInstanceState)
+    mMovieDetailPresenter?.setUpViewModel(this, mMovieId)
+    populateViews()
   }
 
   private fun initViews(){
-    //TODO: Fix toolbar
-
     val linearLayoutManager = LinearLayoutManager(
         mContext,
         LinearLayoutManager.VERTICAL, false
@@ -123,7 +114,7 @@ class MovieDetailFragment : Fragment(), TrailersAdapter.OnTrailerClickHandler  {
       activity!!.supportFragmentManager
         .beginTransaction()
         .replace(R.id.container, ReviewFragment.newInstance(mMovieId), "Review")
-          .addToBackStack(null)
+        .addToBackStack(null)
         .commit()  })
 
     btFavorite.setOnClickListener{ view ->
@@ -154,17 +145,7 @@ class MovieDetailFragment : Fragment(), TrailersAdapter.OnTrailerClickHandler  {
     }
   }
 
-  private fun initViewModel(){
-    mMovieDetailViewModel = ViewModelProviders.of(this)
-        .get(MovieDetailViewModel::class.java)
-    if (mMovieDetailViewModel!!.trailer == null)
-      loadMovieTrailers()
-    else {
-      mTrailersAdapter!!.setTrailersData(getTrailerNames(mMovieDetailViewModel?.trailer!!))
-    }
-  }
-
-  private fun populateViews(savedInstanceState: Bundle?){
+  private fun populateViews(){
     tvMovieName!!.text = movie!!.title
     Picasso.with(mContext)
         .load(MoviesAdapter.BASE_IMAGE_URL + movie!!.posterPath!!)
@@ -181,44 +162,23 @@ class MovieDetailFragment : Fragment(), TrailersAdapter.OnTrailerClickHandler  {
     mContext= context
   }
 
-  private fun loadMovieTrailers() {
-    disposable.add(apiService!!.getMovieTrailers(mMovieId, NetworkUtils.key, NetworkUtils.language)
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribeOn(Schedulers.io())
-        .flatMap { trailer ->
-          mMovieDetailViewModel!!.trailer = trailer
-          getTrailerNameObservable(trailer)
-        }.subscribeWith(object : DisposableSingleObserver<Array<String?>>() {
-          override fun onSuccess(strings: Array<String?>) {
-            mTrailersAdapter!!.setTrailersData(strings)
-          }
-
-          override fun onError(e: Throwable) {
-            Toast.makeText(mContext, e.message, Toast.LENGTH_LONG).show()
-          }
-        })
-    )
+  override fun setPresenter(presenter: Presenter?) {
+    mMovieDetailPresenter= presenter
   }
 
-  private fun getTrailerNameObservable(trailer: Trailer): Single<Array<String?>> {
-    return Single.create { emitter ->
-      if (!emitter.isDisposed)
-        emitter.onSuccess(getTrailerNames(trailer))
-    }
+  override fun updateTrailersAdapter(trailerUrlArray: Array<String?>) {
+    mTrailersAdapter!!.setTrailersData(trailerUrlArray)
   }
 
-  private fun getTrailerNames(trailer: Trailer): Array<String?> {
-    val trailerNames = arrayOfNulls<String>(trailer.results!!.size)
-    val trailerItems = trailer.results
-    for (i in 0 until trailer.results!!.size) {
-      trailerNames[i] = trailerItems!![i].name
-    }
-    return trailerNames
+  override fun showError(error: String?) {
+    Toast.makeText(context, error, Toast.LENGTH_LONG).show()
   }
 
   override fun onTrailerItemClickListener(position: Int) {
-    var key: String? = null
-    key = mMovieDetailViewModel!!.trailer!!.results!![position].key
+    mMovieDetailPresenter?.onTrailerClicked(activity!!.supportFragmentManager, position)
+  }
+
+  override fun showTrailer(key: String?) {
     val intent = Intent(Intent.ACTION_VIEW, Uri.parse("http://www.youtube.com/watch?v=" + key!!))
     if (intent.resolveActivity(activity?.packageManager) != null) {
       startActivity(Intent.createChooser(intent, "View Trailer"))

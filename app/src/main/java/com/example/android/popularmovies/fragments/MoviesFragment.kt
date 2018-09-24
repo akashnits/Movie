@@ -1,6 +1,5 @@
 package com.example.android.popularmovies.fragments
 
-import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
 import android.os.Bundle
 import android.support.v4.app.Fragment
@@ -15,16 +14,11 @@ import android.widget.Toast
 
 import com.example.android.popularmovies.R
 import com.example.android.popularmovies.adapters.MoviesAdapter
+import com.example.android.popularmovies.contract.MoviesContract
+import com.example.android.popularmovies.contract.MoviesContract.Presenter
 import com.example.android.popularmovies.data.MoviesViewModel
-import com.example.android.popularmovies.model.Response
-import com.example.android.popularmovies.networkUtils.ApiClient
-import com.example.android.popularmovies.networkUtils.ApiService
-import com.example.android.popularmovies.utilities.NetworkUtils
-import io.reactivex.Single
-import io.reactivex.android.schedulers.AndroidSchedulers
+import com.example.android.popularmovies.presenter.MoviesPresenter
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.observers.DisposableSingleObserver
-import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_movies.recyclerview_movies
 
 /**
@@ -36,12 +30,11 @@ import kotlinx.android.synthetic.main.fragment_movies.recyclerview_movies
  * create an instance of this fragment.
  *
  */
-class MoviesFragment : Fragment() , MoviesAdapter.onGridItemClickHandler{
+class MoviesFragment : Fragment() , MoviesAdapter.onGridItemClickHandler, MoviesContract.View{
   private var mContext: Context?= null
   private var mMoviesAdapter: MoviesAdapter? = null
-  private var apiService: ApiService? = null
-  private val disposable = CompositeDisposable()
-  private var mMoviesViewModel: MoviesViewModel? = null
+  private var mMoviesPresenter: MoviesContract.Presenter? =null
+  private var disposable: CompositeDisposable = CompositeDisposable()
 
 
   companion object {
@@ -57,10 +50,10 @@ class MoviesFragment : Fragment() , MoviesAdapter.onGridItemClickHandler{
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    mMoviesPresenter= MoviesPresenter(this)
+    mMoviesPresenter?.setUpDisposable(disposable)
     setHasOptionsMenu(true)
     mMoviesAdapter = MoviesAdapter(mContext, this)
-    apiService = ApiClient.client
-        .create<ApiService>(ApiService::class.java)
   }
 
   override fun onCreateView(
@@ -78,7 +71,7 @@ class MoviesFragment : Fragment() , MoviesAdapter.onGridItemClickHandler{
   ) {
     super.onViewCreated(view, savedInstanceState)
     initViews()
-    initViewModel()
+    mMoviesPresenter?.setUpViewModel(this)
   }
 
   private fun initViews(){
@@ -88,92 +81,25 @@ class MoviesFragment : Fragment() , MoviesAdapter.onGridItemClickHandler{
     recyclerview_movies.adapter = mMoviesAdapter
   }
 
-  private fun initViewModel(){
-    mMoviesViewModel = ViewModelProviders.of(this)
-        .get(MoviesViewModel::class.java)
-    if (mMoviesViewModel!!.response == null) {
-      loadPopularMovies()
-    } else {
-      val movieImageUrls = getImageUrls(mMoviesViewModel!!.response)
-      mMoviesAdapter!!.setMoviesData(movieImageUrls)
-    }
-  }
-
   override fun onAttach(context: Context) {
     super.onAttach(context)
     mContext= context
   }
 
-  private fun loadPopularMovies() {
-    disposable.add(apiService!!
-        .getPopularMovies(NetworkUtils.key, NetworkUtils.language)
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribeOn(Schedulers.io())
-        .flatMap { movie ->
-          mMoviesViewModel!!.response = movie
-          getImageUrlObservable(movie)
-        }
-        .subscribeWith(object : DisposableSingleObserver<Array<String?>>() {
-          override fun onSuccess(strings: Array<String?>) {
-            mMoviesAdapter!!.setMoviesData(strings)
-          }
-
-          override fun onError(e: Throwable) {
-            Toast.makeText(mContext, e.message, Toast.LENGTH_SHORT)
-                .show()
-          }
-        })
-    )
+  override fun setPresenter(presenter: Presenter?) {
+    mMoviesPresenter= presenter
   }
 
-  private fun loadTopRatedMovies() {
-    disposable.add(apiService!!
-        .getTopRatedMovies(NetworkUtils.key, NetworkUtils.language)
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribeOn(Schedulers.io())
-        .flatMap { movie ->
-          mMoviesViewModel!!.response = movie
-          getImageUrlObservable(movie)
-        }
-        .subscribeWith(object : DisposableSingleObserver<Array<String?>>() {
-          override fun onSuccess(strings: Array<String?>) {
-            mMoviesAdapter!!.setMoviesData(strings)
-          }
-
-          override fun onError(e: Throwable) {
-            Toast.makeText(mContext, e.message, Toast.LENGTH_SHORT)
-                .show()
-          }
-        })
-    )
+  override fun updateMoviesAdapter(movieUrlList: Array<String?>) {
+    mMoviesAdapter!!.setMoviesData(movieUrlList)
   }
 
-  private fun getImageUrlObservable(response: Response): Single<Array<String?>> {
-    val moviesImageUrl = getImageUrls(response)
-
-    return Single.create { emitter ->
-      if (!emitter.isDisposed) {
-        emitter.onSuccess(moviesImageUrl)
-      }
-    }
-  }
-
-  private fun getImageUrls(response: Response?): Array<String?> {
-    val moviesImageUrl = arrayOfNulls<String>(response?.results!!.size)
-
-    for (i in 0 until response.results!!.size) {
-      moviesImageUrl[i] = response.results!![i].posterPath
-    }
-    return moviesImageUrl
+  override fun showError(error: String?) {
+    Toast.makeText(context, error, Toast.LENGTH_LONG).show()
   }
 
   override fun onGridItemClick(position: Int) {
-    val movie = mMoviesViewModel?.response?.results!![position]
-    activity!!.supportFragmentManager
-        .beginTransaction()
-        .replace(R.id.container, MovieDetailFragment.newInstance(movie), "Movie details")
-        .addToBackStack(null)
-        .commit()
+    mMoviesPresenter?.onItemClicked(activity!!.supportFragmentManager, position)
   }
 
   override fun onCreateOptionsMenu(
@@ -186,8 +112,8 @@ class MoviesFragment : Fragment() , MoviesAdapter.onGridItemClickHandler{
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
-      R.id.popularMovies -> loadPopularMovies()
-      R.id.topRated -> loadTopRatedMovies()
+      R.id.popularMovies -> showPopularMovies()
+      R.id.topRated -> showTopRatedMovies()
       R.id.favoriteMovies -> {
         activity!!.supportFragmentManager
             .beginTransaction()
@@ -199,6 +125,14 @@ class MoviesFragment : Fragment() , MoviesAdapter.onGridItemClickHandler{
       }
     }
     return true
+  }
+
+  override fun showPopularMovies() {
+    mMoviesPresenter?.loadPopularMovies()
+  }
+
+  override fun showTopRatedMovies() {
+    mMoviesPresenter?.loadTopRatedMovies()
   }
 
   override fun onDestroy() {

@@ -16,9 +16,12 @@ import android.view.ViewGroup
 
 import com.example.android.popularmovies.R
 import com.example.android.popularmovies.adapters.MoviesCursorAdapter
+import com.example.android.popularmovies.contract.FavoriteContract
+import com.example.android.popularmovies.contract.FavoriteContract.Presenter
 import com.example.android.popularmovies.data.MovieContract
 import com.example.android.popularmovies.data.MovieContract.MovieEntry
 import com.example.android.popularmovies.model.Movies
+import com.example.android.popularmovies.presenter.FavoritePresenter
 import kotlinx.android.synthetic.main.fragment_favorite.pbLoadingIndicatorFav
 import kotlinx.android.synthetic.main.fragment_favorite.rvFavMovies
 
@@ -28,26 +31,14 @@ import kotlinx.android.synthetic.main.fragment_favorite.rvFavMovies
  * create an instance of this fragment.
  *
  */
-class FavoriteFragment : Fragment(), LoaderManager.LoaderCallbacks<Cursor>, MoviesCursorAdapter.OnGridItemClickHandler {
+class FavoriteFragment : Fragment(), FavoriteContract.View, MoviesCursorAdapter.OnGridItemClickHandler {
 
   private var mMoviesCursorAdapter: MoviesCursorAdapter? = null
+  private var mFavoritePresenter: FavoriteContract.Presenter?= null
   var mContext: Context? = null
 
+
   companion object {
-
-    val MOVIES_PROJECTION = arrayOf(
-        MovieContract.MovieEntry.COLUMN_MOVIE_ID, MovieContract.MovieEntry.COULMN_IMAGE_URL,
-        MovieContract.MovieEntry.COLUMN_DATE, MovieContract.MovieEntry.COLUMN_RATINGS,
-        MovieContract.MovieEntry.COLUMN_MOVIE_TITLE, MovieContract.MovieEntry.COLUMN_OVERVIEW
-    )
-
-    val INDEX_MOVIE_ID = 0
-    val INDEX_IMAGE_URL = 1
-    val INDEX_DATE = 2
-    val INDEX_RATINGS = 3
-    val INDEX_MOVIE_TITLE = 4
-    val INDEX_OVERVIEW = 5
-
     val LOADER_FAV_MOVIES_ID = 183
 
     /**
@@ -62,7 +53,7 @@ class FavoriteFragment : Fragment(), LoaderManager.LoaderCallbacks<Cursor>, Movi
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     mMoviesCursorAdapter = MoviesCursorAdapter(mContext, this)
-
+    mFavoritePresenter= FavoritePresenter(this, mContext)
   }
 
   override fun onCreateView(
@@ -80,8 +71,7 @@ class FavoriteFragment : Fragment(), LoaderManager.LoaderCallbacks<Cursor>, Movi
   ) {
     super.onViewCreated(view, savedInstanceState)
     initViews()
-    loaderManager.initLoader(
-        LOADER_FAV_MOVIES_ID, null, this)
+    mFavoritePresenter?.startLoader(LOADER_FAV_MOVIES_ID, loaderManager)
   }
 
   override fun onAttach(context: Context?) {
@@ -90,73 +80,23 @@ class FavoriteFragment : Fragment(), LoaderManager.LoaderCallbacks<Cursor>, Movi
   }
 
   private fun initViews(){
-    //TODO: Fix toolbar
     val staggeredGridLayoutManager =
       StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
     rvFavMovies!!.layoutManager = staggeredGridLayoutManager
     rvFavMovies!!.adapter = mMoviesCursorAdapter
   }
 
-  override fun onCreateLoader(
-    id: Int,
-    args: Bundle?
-  ): Loader<Cursor> {
-
-    when (id) {
-      LOADER_FAV_MOVIES_ID -> {
-        pbLoadingIndicatorFav!!.visibility = View.VISIBLE
-        val sortOrder = BaseColumns._ID + " ASC"
-        return CursorLoader(
-            mContext!!,
-            MovieEntry.CONTENT_URI,
-            MOVIES_PROJECTION, null, null,
-            sortOrder
-        )
-      }
-      else -> throw RuntimeException("Loader not implemented: ${LOADER_FAV_MOVIES_ID}")
-    }
+  override fun setPresenter(presenter: Presenter?) {
+    mFavoritePresenter= presenter
   }
 
-  override fun onLoadFinished(
-    loader: Loader<Cursor>,
-    data: Cursor
-  ) {
-    mMoviesCursorAdapter!!.swapCursor(data)
-    pbLoadingIndicatorFav!!.visibility = View.INVISIBLE
-  }
-
-  override fun onLoaderReset(loader: Loader<Cursor>) {
+  override fun updateMovieCursorAdapter(cursor: Cursor) {
+    mMoviesCursorAdapter!!.swapCursor(cursor)
 
   }
 
   override fun onGridItemClickListener(movieId: Int) {
-    val uri = MovieContract.MovieEntry.CONTENT_URI.buildUpon()
-        .appendPath(movieId.toString())
-        .build()
-
-    val cursor = mContext?.contentResolver?.query(
-        uri,
-        MOVIES_PROJECTION, null, null, null
-    )
-    if (cursor != null) {
-      cursor.moveToNext()
-      val movie = Movies(
-          cursor.getInt(INDEX_MOVIE_ID), cursor.getString(
-          INDEX_IMAGE_URL
-      ),
-          cursor.getString(INDEX_DATE),
-          cursor.getString(INDEX_RATINGS), cursor.getString(
-          INDEX_MOVIE_TITLE
-      ),
-          cursor.getString(INDEX_OVERVIEW)
-      )
-      activity?.supportFragmentManager
-          ?.beginTransaction()
-          ?.replace(R.id.container, MovieDetailFragment.newInstance(movie), "Movie detail")
-          ?.addToBackStack(null)
-          ?.commit();
-      cursor.close()
-    }
+    mFavoritePresenter?.onItemClicked(activity!!.supportFragmentManager, movieId)
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {

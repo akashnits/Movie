@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
@@ -14,14 +13,11 @@ import android.widget.Toast
 
 import com.example.android.popularmovies.R
 import com.example.android.popularmovies.adapters.ReviewsAdapter
+import com.example.android.popularmovies.contract.ReviewContract
+import com.example.android.popularmovies.contract.ReviewContract.Presenter
 import com.example.android.popularmovies.model.ReviewItem
-import com.example.android.popularmovies.networkUtils.ApiClient
-import com.example.android.popularmovies.networkUtils.ApiService
-import com.example.android.popularmovies.utilities.NetworkUtils
-import io.reactivex.android.schedulers.AndroidSchedulers
+import com.example.android.popularmovies.presenter.ReviewPresenter
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.observers.DisposableSingleObserver
-import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_review.rvReview
 
 /**
@@ -30,15 +26,15 @@ import kotlinx.android.synthetic.main.fragment_review.rvReview
  * create an instance of this fragment.
  *
  */
-class ReviewFragment : Fragment() {
+class ReviewFragment : Fragment(), ReviewContract.View {
   var pb_loading_indicator: ProgressBar? = null
 
 
   private var mReviewAdapter: ReviewsAdapter? = null
   private var mMovieId: Int = 0
-  private var apiService: ApiService? = null
   private val disposable = CompositeDisposable()
   private var mContext: Context? = null
+  private var mReviewPresenter: ReviewContract.Presenter?= null
 
   companion object {
     /**
@@ -65,7 +61,8 @@ class ReviewFragment : Fragment() {
       mMovieId = it.getInt("movieId")
     }
     mReviewAdapter = ReviewsAdapter(mContext)
-    apiService = ApiClient.client.create(ApiService::class.java)
+    mReviewPresenter= ReviewPresenter(this)
+    mReviewPresenter?.setUpDisposable(disposable)
   }
 
   override fun onCreateView(
@@ -83,7 +80,7 @@ class ReviewFragment : Fragment() {
   ) {
     super.onViewCreated(view, savedInstanceState)
     initViews()
-    loadMovieReview()
+    mReviewPresenter?.loadMovieReviews(mMovieId)
   }
 
   override fun onAttach(context: Context?) {
@@ -92,30 +89,22 @@ class ReviewFragment : Fragment() {
   }
 
   private fun initViews(){
-    //TODO: fix toolbar
     val linearLayoutManager = LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false)
     rvReview!!.layoutManager = linearLayoutManager
     rvReview!!.hasFixedSize()
     rvReview!!.adapter = mReviewAdapter
   }
 
-  private fun loadMovieReview() {
-    disposable.add(apiService!!
-        .getMovieReviews(mMovieId, NetworkUtils.key, NetworkUtils.language)
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribeOn(Schedulers.io())
-        .map { review -> review.results }
-        .subscribeWith(object : DisposableSingleObserver<List<ReviewItem>>() {
-          override fun onSuccess(reviewItems: List<ReviewItem>) {
-            mReviewAdapter!!.setData(reviewItems)
-          }
+  override fun showError(error: String?) {
+    Toast.makeText(context, error, Toast.LENGTH_LONG).show()
+  }
 
-          override fun onError(e: Throwable) {
-            Toast.makeText(mContext, e.message, Toast.LENGTH_SHORT)
-                .show()
-          }
-        })
-    )
+  override fun setPresenter(presenter: Presenter?) {
+    mReviewPresenter= presenter
+  }
+
+  override fun updateReviewAdapter(reviewList: List<ReviewItem>) {
+    mReviewAdapter!!.setData(reviewList)
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {

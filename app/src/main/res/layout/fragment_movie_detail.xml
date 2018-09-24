@@ -13,26 +13,23 @@
         android:id="@+id/activity_detail"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context="com.example.android.popularmovies.MovieDetailActivity">
+        >
 
       <TextView
           android:id="@+id/tvMovieName"
-          android:layout_width="373dp"
+          android:layout_width="match_parent"
           android:layout_height="69dp"
-          android:layout_marginEnd="16dp"
-          android:layout_marginLeft="16dp"
-          android:layout_marginRight="16dp"
-          android:layout_marginStart="16dp"
           android:background="@color/lightGray"
           android:gravity="center_vertical"
           android:paddingLeft="8dp"
           android:paddingRight="8dp"
-          tools:text="Chappie"
           android:textAppearance="@android:style/TextAppearance.Material.Title"
           android:textColor="@color/black"
           app:layout_constraintLeft_toLeftOf="parent"
           app:layout_constraintRight_toRightOf="parent"
-          app:layout_constraintTop_toTopOf="parent" />
+          app:layout_constraintTop_toTopOf="parent"
+          tools:text="Chappie"
+          />
 
       <com.example.android.popularmovies.displayUtilities.MoviesImageView
           android:id="@+id/ivDetail"

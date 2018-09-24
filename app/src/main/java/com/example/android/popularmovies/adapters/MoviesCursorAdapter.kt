@@ -17,6 +17,7 @@ import com.squareup.picasso.Picasso
 import butterknife.BindView
 import butterknife.ButterKnife
 import com.example.android.popularmovies.fragments.FavoriteFragment
+import com.example.android.popularmovies.presenter.FavoritePresenter
 import kotlinx.android.synthetic.main.list_item_movies.view.imageView
 import kotlinx.android.synthetic.main.list_item_movies.view.linearLayout
 
@@ -40,17 +41,18 @@ class MoviesCursorAdapter(private val context: Context?, private val mHandler: O
   }
 
   override fun onBindViewHolder(holder: FavoriteMoviesViewHolder, position: Int) {
-    val moved = mCursor!!.moveToPosition(position)
-    if (moved && !mCursor!!.isClosed) {
-      val stringImageUrl =
-        MoviesAdapter.BASE_IMAGE_URL + mCursor!!.getString(FavoriteFragment.INDEX_IMAGE_URL)
-      Picasso.with(context)
-          .load(stringImageUrl)
-          .into(holder.imageView)
-      holder.itemView.tag = mCursor!!.getInt(FavoriteFragment.INDEX_MOVIE_ID)
-      Log.v(TAG, "ImageUrl to load: $stringImageUrl")
+    if(!mCursor!!.isClosed) {
+      val moved = mCursor!!.moveToPosition(position)
+      if (moved) {
+        val stringImageUrl =
+          MoviesAdapter.BASE_IMAGE_URL + mCursor!!.getString(FavoritePresenter.INDEX_IMAGE_URL)
+        Picasso.with(context)
+            .load(stringImageUrl)
+            .into(holder.imageView)
+        holder.itemView.tag = mCursor!!.getInt(FavoritePresenter.INDEX_MOVIE_ID)
+        Log.v(TAG, "ImageUrl to load: $stringImageUrl")
+      }
     }
-
   }
 
   override fun getItemCount(): Int {
