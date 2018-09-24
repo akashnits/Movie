@@ -1,6 +1,5 @@
-# PopularMovies
+# Movies
 
-* Popular Movies Part 1 & 2 
 
 * An Android applicatoin to browse movies from  [The Movie Database](https://www.themoviedb.org/?language=en)
 
@@ -34,5 +33,3 @@
 
 Important Note : Please add the API_KEY : "676eeceb42c83ae99f98f7683077a7de"
 
-## Android Developer Nanodegree
-[![Udacity](https://cloud.githubusercontent.com/assets/3719141/14508774/c7f6cbce-01d1-11e6-9daf-02bcd10b6400.jpeg)](https://www.udacity.com/course/android-developer-nanodegree--nd801)
